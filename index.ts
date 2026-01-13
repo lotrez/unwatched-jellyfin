@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import yargs from "yargs";
 import { JellyfinClient } from "./jellyfin-client";
 import { SonarrClient } from "./sonarr-client";
@@ -73,8 +74,8 @@ async function main() {
   );
 
   console.log("Starting unwatched media cleanup...");
-  console.log(`Age threshold: ${ageThresholdDays} days`);
-  console.log(`Mode: ${dryRun ? "DRY RUN" : "EXECUTE"}`);
+  console.log("Age threshold: " + ageThresholdDays + " days");
+  console.log("Mode: " + (dryRun ? "DRY RUN" : "EXECUTE"));
 
   console.log("\nAuthenticating with Jellyfin...");
   await jellyfin.authenticate();
@@ -82,13 +83,13 @@ async function main() {
 
   console.log("Fetching all episodes from Jellyfin...");
   const allEpisodes = await jellyfin.getAllEpisodes();
-  console.log(`Found ${allEpisodes.length} total episodes`);
+  console.log("Found " + allEpisodes.length + " total episodes");
 
   const watchedEpisodes = allEpisodes.filter((ep) => ep.played);
-  console.log(`Found ${watchedEpisodes.length} watched episodes`);
+  console.log("Found " + watchedEpisodes.length + " watched episodes");
 
   const unwatchedEpisodes = allEpisodes.filter((ep) => !ep.played);
-  console.log(`Found ${unwatchedEpisodes.length} unwatched episodes`);
+  console.log("Found " + unwatchedEpisodes.length + " unwatched episodes");
 
   console.log("\nGrouping episodes by series...");
   const seriesMap = new Map<string, typeof allEpisodes>();
@@ -101,7 +102,7 @@ async function main() {
     seriesMap.get(ep.seriesName)!.push(ep);
   }
 
-  console.log(`Found ${seriesMap.size} unique series`);
+  console.log("Found " + seriesMap.size + " unique series");
 
   const fullyUnwatchedSeries = [];
 
@@ -122,7 +123,11 @@ async function main() {
   }
 
   console.log(
-    `Found ${fullyUnwatchedSeries.length} fully unwatched series (> ${ageThresholdDays} days old)`
+    "Found " +
+      fullyUnwatchedSeries.length +
+      " fully unwatched series (> " +
+      ageThresholdDays +
+      " days old)"
   );
 
   if (fullyUnwatchedSeries.length === 0) {
@@ -154,11 +159,7 @@ async function main() {
   }
 
   console.log(
-    `Found ${seriesToProcess.length} series in Sonarr that are fully unwatched and old`
-  );
-
-  console.log(
-    `Found ${seriesToProcess.length} series in Sonarr that are fully unwatched and old`
+    "Found " + seriesToProcess.length + " series in Sonarr that are fully unwatched and old"
   );
 
   if (seriesToProcess.length === 0) {
@@ -189,18 +190,19 @@ async function main() {
   let totalSizeBytes = actions.reduce((sum, a) => sum + a.sizeBytes, 0);
   const totalSizeGB = totalSizeBytes / (1024 * 1024 * 1024);
 
-  console.log(`\n=== Summary ===`);
-  console.log(`Total series to unmonitor and delete files: ${actions.length}`);
-  console.log(`Total files to delete: ${totalFilesToDelete}`);
-  console.log(`Total disk space to free: ${totalSizeGB.toFixed(2)} GB`);
+  console.log("\n=== Summary ===");
+  console.log("Total series to unmonitor and delete files: " + actions.length);
+  console.log("Total files to delete: " + totalFilesToDelete);
+  console.log("Total disk space to free: " + totalSizeGB.toFixed(2) + " GB");
 
   console.log("\nSeries to process (sorted by size):");
   actions
     .sort((a, b) => b.sizeBytes - a.sizeBytes)
+    .slice(0, 5)
     .forEach((action) => {
       const sizeGB = action.sizeBytes / (1024 * 1024 * 1024);
       console.log(
-        `  - ${action.seriesTitle} (${action.fileCount} files, ${sizeGB.toFixed(2)} GB)`
+        "  - " + action.seriesTitle + " (" + action.fileCount + " files, " + sizeGB.toFixed(2) + " GB)"
       );
     });
 
@@ -210,30 +212,53 @@ async function main() {
   } else {
     console.log("\n=== Executing deletions ===");
 
-    for (const { seriesId, seriesTitle } of actions) {
-      console.log(`Processing: ${seriesTitle}`);
+    let totalDeleted = 0;
+    let totalSkipped = 0;
+
+    for (const { seriesId, seriesTitle, fileCount } of actions) {
+      console.log("Processing: " + seriesTitle + " (" + fileCount + " files expected)");
+
+      if (fileCount === 0) {
+        console.log("  Skipping: No files to delete");
+        await sonarr.updateSeriesMonitored(seriesId, false);
+        totalSkipped++;
+        continue;
+      }
 
       const episodes = await sonarr.getEpisodesBySeriesId(seriesId);
       let deletedCount = 0;
+      let skippedCount = 0;
 
       for (const ep of episodes) {
-        if (ep.episodeFileId !== null) {
-          await sonarr.deleteEpisodeFile(ep.episodeFileId);
-          deletedCount++;
+        if (ep.episodeFileId !== null && ep.episodeFileId !== 0) {
+          try {
+            await sonarr.deleteEpisodeFile(ep.episodeFileId);
+            deletedCount++;
+          } catch (e: any) {
+            if (e.message && (e.message.includes("404") || e.message.includes("does not exist"))) {
+              console.log("    - Skipping episode file " + ep.episodeFileId + " (not found)");
+              skippedCount++;
+            } else {
+              console.log("    - Error deleting episode file " + ep.episodeFileId + ": " + e.message);
+            }
+          }
+        } else {
+          skippedCount++;
         }
       }
 
-      await sonarr.updateSeries(seriesId, {
-        monitored: false,
-      });
+      await sonarr.updateSeriesMonitored(seriesId, false);
 
-      console.log(`  - Deleted ${deletedCount} files and unmonitored: ${seriesTitle}`);
+      console.log(
+        "  - Deleted " + deletedCount + " files, skipped " + skippedCount + ", unmonitored: " + seriesTitle
+      );
+      totalDeleted += deletedCount;
     }
 
     console.log("\n=== Complete ===");
-    console.log(`Deleted ${totalFilesToDelete} files`);
-    console.log(`Freed ${totalSizeGB.toFixed(2)} GB of disk space`);
-    console.log(`Unmonitored ${actions.length} series`);
+    console.log("Deleted " + totalDeleted + " files");
+    console.log("Skipped " + totalSkipped + " files (not found or already deleted)");
+    console.log("Unmonitored " + actions.length + " series");
   }
 }
 

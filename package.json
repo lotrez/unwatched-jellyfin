@@ -2,13 +2,20 @@
   "name": "unwatched-jellyfin",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/yargs": "^17.0.35"
+  },
+  "bin": {
+    "unwatched-jellyfin": "./dist/cli.js"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "bun build index.ts --target bun --outdir dist"
+  },
   "dependencies": {
     "yargs": "^18.0.0"
   }

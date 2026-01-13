@@ -46,6 +46,22 @@ export class SonarrClient {
     );
   }
 
+  async getSeriesById(seriesId: number) {
+    return this.request<any>(`/api/v3/series/${seriesId}`);
+  }
+
+  async updateSeriesMonitored(seriesId: number, monitored: boolean) {
+    const series = await this.getSeriesById(seriesId);
+    const updatedSeries = {
+      ...series,
+      monitored,
+    };
+    return this.request<any>(`/api/v3/series/${seriesId}`, {
+      method: "PUT",
+      body: JSON.stringify(updatedSeries),
+    });
+  }
+
   async getEpisodeFile(episodeFileId: number) {
     return this.request<any>(`/api/v3/episodefile/${episodeFileId}`);
   }
@@ -57,9 +73,20 @@ export class SonarrClient {
   }
 
   async deleteEpisodeFile(episodeFileId: number) {
-    return this.request(`/api/v3/episodefile/${episodeFileId}`, {
+    const url = `${this.baseUrl}/api/v3/episodefile/${episodeFileId}`;
+    const response = await fetch(url, {
       method: "DELETE",
+      headers: {
+        "X-Api-Key": this.apiKey,
+      },
     });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Sonarr API error: ${response.status} ${response.statusText} - ${text}`);
+    }
+
+    return response.json();
   }
 
   async getEpisodeFiles() {
