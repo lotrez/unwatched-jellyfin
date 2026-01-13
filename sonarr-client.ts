@@ -1,13 +1,10 @@
-const SONARR_URL = process.env.SONARR_URL || "http://localhost:8989";
-const SONARR_API_KEY = process.env.SONARR_API_KEY || "";
-
 export class SonarrClient {
   private baseUrl: string;
   private apiKey: string;
 
-  constructor() {
-    this.baseUrl = SONARR_URL;
-    this.apiKey = SONARR_API_KEY;
+  constructor(baseUrl: string, apiKey: string) {
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {

@@ -1,10 +1,20 @@
 # Agent Guidelines for unwatched-jellyfin
 
 ## Commands
-- **Run**: `bun run index.ts` (executes main cleanup script)
+- **Run**: `bun run index.ts [OPTIONS]` (executes main cleanup script)
 - **Install**: `bun install`
 - **Build**: `bun build index.ts --target bun --outdir dist`
 - **Type check**: `bunx tsc --noEmit`
+- **CLI Options**:
+  - `--sonarr-url <url>` - Sonarr server URL
+  - `--sonarr-api-key <key>` - Sonarr API key
+  - `--jellyfin-url <url>` - Jellyfin server URL
+  - `--jellyfin-username <user>` - Jellyfin username
+  - `--jellyfin-password <pass>` - Jellyfin password
+  - `--days <number>` - Age threshold in days (default: 365)
+  - `--dry-run, -d` - Dry run mode (default)
+  - `--execute, -e` - Execute deletions (not dry run)
+  - `--help, -h` - Show help message
 
 ## Project Overview
 This project identifies and optionally deletes old, unwatched TV series from Sonarr based on Jellyfin playback data. It queries Jellyfin's playback activity to determine which episodes have been watched, cross-references with Sonarr, and flags series that haven't been watched within a configurable threshold.

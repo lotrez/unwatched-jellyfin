@@ -29,10 +29,6 @@ interface JellyfinItem {
   };
 }
 
-const JELLYFIN_URL = process.env.JELLYFIN_URL || "http://localhost:8096";
-const JELLYFIN_USERNAME = process.env.JELLYFIN_USERNAME || "";
-const JELLYFIN_PASSWORD = process.env.JELLYFIN_PASSWORD || "";
-
 export class JellyfinClient {
   private baseUrl: string;
   private username: string;
@@ -40,10 +36,10 @@ export class JellyfinClient {
   private authToken: string | null = null;
   private userId: string | null = null;
 
-  constructor() {
-    this.baseUrl = JELLYFIN_URL;
-    this.username = JELLYFIN_USERNAME;
-    this.password = JELLYFIN_PASSWORD;
+  constructor(baseUrl: string, username: string, password: string) {
+    this.baseUrl = baseUrl;
+    this.username = username;
+    this.password = password;
   }
 
   async authenticate() {

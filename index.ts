@@ -1,8 +1,53 @@
+import yargs from "yargs";
 import { JellyfinClient } from "./jellyfin-client";
 import { SonarrClient } from "./sonarr-client";
 
-const AGE_THRESHOLD_DAYS = parseInt(process.env.AGE_THRESHOLD_DAYS || "365", 10);
-const DRY_RUN = process.env.DRY_RUN !== "false";
+const args = yargs(process.argv.slice(2))
+  .option("sonarr-url", {
+    type: "string",
+    describe: "Sonarr server URL",
+    default: process.env.SONARR_URL || "http://localhost:8989",
+  })
+  .option("sonarr-api-key", {
+    type: "string",
+    describe: "Sonarr API key",
+    default: process.env.SONARR_API_KEY || "",
+  })
+  .option("jellyfin-url", {
+    type: "string",
+    describe: "Jellyfin server URL",
+    default: process.env.JELLYFIN_URL || "http://localhost:8096",
+  })
+  .option("jellyfin-username", {
+    type: "string",
+    describe: "Jellyfin username",
+    default: process.env.JELLYFIN_USERNAME || "",
+  })
+  .option("jellyfin-password", {
+    type: "string",
+    describe: "Jellyfin password",
+    default: process.env.JELLYFIN_PASSWORD || "",
+  })
+  .option("days", {
+    type: "number",
+    describe: "Age threshold in days",
+    default: parseInt(process.env.AGE_THRESHOLD_DAYS || "365", 10),
+  })
+  .option("dry-run", {
+    type: "boolean",
+    describe: "Dry run mode (no deletions)",
+    alias: "d",
+    default: process.env.DRY_RUN !== "false",
+  })
+  .option("execute", {
+    type: "boolean",
+    describe: "Execute deletions (not dry run)",
+    alias: "e",
+    default: false,
+  })
+  .help()
+  .alias("help", "h")
+  .parseSync();
 
 function isOlderThan(dateStr: string, days: number): boolean {
   const date = new Date(dateStr);
@@ -13,12 +58,25 @@ function isOlderThan(dateStr: string, days: number): boolean {
 }
 
 async function main() {
+  const ageThresholdDays = args.days;
+  const dryRun = args["dry-run"] && !args.execute;
+
+  const jellyfin = new JellyfinClient(
+    args["jellyfin-url"],
+    args["jellyfin-username"],
+    args["jellyfin-password"]
+  );
+
+  const sonarr = new SonarrClient(
+    args["sonarr-url"],
+    args["sonarr-api-key"]
+  );
+
   console.log("Starting unwatched media cleanup...");
+  console.log(`Age threshold: ${ageThresholdDays} days`);
+  console.log(`Mode: ${dryRun ? "DRY RUN" : "EXECUTE"}`);
 
-  const jellyfin = new JellyfinClient();
-  const sonarr = new SonarrClient();
-
-  console.log("Authenticating with Jellyfin...");
+  console.log("\nAuthenticating with Jellyfin...");
   await jellyfin.authenticate();
   console.log("Authenticated successfully");
 
@@ -32,7 +90,7 @@ async function main() {
   const unwatchedEpisodes = allEpisodes.filter((ep) => !ep.played);
   console.log(`Found ${unwatchedEpisodes.length} unwatched episodes`);
 
-  console.log("Grouping episodes by series...");
+  console.log("\nGrouping episodes by series...");
   const seriesMap = new Map<string, typeof allEpisodes>();
 
   for (const ep of allEpisodes) {
@@ -47,13 +105,13 @@ async function main() {
 
   const fullyUnwatchedSeries = [];
 
-  for (const [seriesName, episodes] of seriesMap) {
+  for (const [seriesName, episodes] of Array.from(seriesMap.entries())) {
     const watchedCount = episodes.filter((e) => e.played).length;
     if (watchedCount === 0 && episodes.length > 0) {
       const oldestEpisode = episodes.reduce((oldest, ep) =>
         ep.dateCreated < oldest.dateCreated ? ep : oldest
       );
-      if (isOlderThan(oldestEpisode.dateCreated, AGE_THRESHOLD_DAYS)) {
+      if (isOlderThan(oldestEpisode.dateCreated, ageThresholdDays)) {
         fullyUnwatchedSeries.push({
           seriesName,
           episodeCount: episodes.length,
@@ -64,7 +122,7 @@ async function main() {
   }
 
   console.log(
-    `Found ${fullyUnwatchedSeries.length} fully unwatched series (> ${AGE_THRESHOLD_DAYS} days old)`
+    `Found ${fullyUnwatchedSeries.length} fully unwatched series (> ${ageThresholdDays} days old)`
   );
 
   if (fullyUnwatchedSeries.length === 0) {
@@ -72,7 +130,7 @@ async function main() {
     return;
   }
 
-  console.log("Fetching series from Sonarr...");
+  console.log("\nFetching series from Sonarr...");
   const sonarrSeries = await sonarr.getSeries();
   const sonarrSeriesMap = new Map(
     sonarrSeries.map((s: any) => [s.title, s])
@@ -95,7 +153,13 @@ async function main() {
     }
   }
 
-  console.log(`Found ${seriesToProcess.length} series in Sonarr that are fully unwatched and old`);
+  console.log(
+    `Found ${seriesToProcess.length} series in Sonarr that are fully unwatched and old`
+  );
+
+  console.log(
+    `Found ${seriesToProcess.length} series in Sonarr that are fully unwatched and old`
+  );
 
   if (seriesToProcess.length === 0) {
     console.log("No matching series found in Sonarr. Exiting.");
@@ -140,10 +204,10 @@ async function main() {
       );
     });
 
-  console.log("\nDry run complete. No files were deleted.");
-  console.log("To actually delete files and unmonitor series, set DRY_RUN=false");
-
-  if (!DRY_RUN) {
+  if (dryRun) {
+    console.log("\nDry run complete. No files were deleted.");
+    console.log("Use --execute to actually delete files and unmonitor series.");
+  } else {
     console.log("\n=== Executing deletions ===");
 
     for (const { seriesId, seriesTitle } of actions) {
