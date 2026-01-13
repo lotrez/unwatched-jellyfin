@@ -26,7 +26,7 @@
   "scripts": {
     "prepare": "bun run build",
     "prepublishOnly": "bun run build",
-    "build": "bun build index.ts --target bun --outdir dist"
+    "build": "bun build index.ts --target bun --outfile dist/cli.js"
   },
   "dependencies": {
     "yargs": "^18.0.0"
