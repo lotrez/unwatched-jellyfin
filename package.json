@@ -1,6 +1,6 @@
 {
   "name": "unwatched-jellyfin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool to identify and delete old, unwatched TV series from Sonarr based on Jellyfin playback data",
   "engines": {
     "bun": ">=1.0.0"
