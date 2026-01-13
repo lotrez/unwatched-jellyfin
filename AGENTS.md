@@ -3,7 +3,8 @@
 ## Commands
 - **Run**: `bun run index.ts [OPTIONS]` or `npx unwatched-jellyfin [OPTIONS]` (executes main cleanup script)
 - **Install**: `bun install`
-- **Build**: `bun run build` (builds CLI to dist/cli.js - must be run before npm publish)
+- **Build**: `bun run build` (builds CLI to dist/cli.js)
+- **Publish**: `npm publish` (runs prepublishOnly build script automatically)
 - **Type check**: `bunx tsc --noEmit`
 - **CLI Options**:
   - `--sonarr-url <url>` - Sonarr server URL

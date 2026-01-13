@@ -1,0 +1,21 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+*.tgz
+
+# Development
+.ignored
+*.ts
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.DS_Store
+
+# Testing
+coverage
+*.lcov

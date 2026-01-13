@@ -18,28 +18,25 @@ bun install
 
 ## Usage
 
-### Using bun run:
+### Via npx (recommended):
 
 ```bash
 # Dry run (default) - shows what would be deleted
-bun run index.ts
-
-# Show help
-bun run index.ts --help
+npx unwatched-jellyfin --dry-run
 
 # Execute deletions with custom age threshold
-bun run index.ts --days=180 --execute
+npx unwatched-jellyfin --days=180 --execute
 
-# Override server URLs
-bun run index.ts --sonarr-url=http://localhost:8989 --jellyfin-url=http://localhost:8096 --days=365 --dry-run
+# Show help
+npx unwatched-jellyfin --help
 ```
 
-### Using npx:
+### Via bun run (for development):
 
 ```bash
-npx unwatched-jellyfin --help
-npx unwatched-jellyfin --days=365 --dry-run
-npx unwatched-jellyfin --days=180 --execute
+bun run index.ts --help
+bun run index.ts --days=365 --dry-run
+bun run index.ts --execute
 ```
 
 ## CLI Options
@@ -72,7 +69,7 @@ All sensitive credentials can be set via environment variables (see `.env.exampl
 2. Groups episodes by series to identify fully unwatched series (0% watched)
 3. Filters series where the oldest episode is older than the threshold
 4. Cross-references with Sonarr to find matching series
-5. Calculates disk space to be freed
+5. Calculates disk space that would be freed
 6. If not dry-run: deletes all episode files and unmonitors each series
 
 ## Requirements
@@ -84,3 +81,4 @@ All sensitive credentials can be set via environment variables (see `.env.exampl
 ## License
 
 MIT
+
