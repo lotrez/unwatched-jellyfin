@@ -42,10 +42,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/unwatched-jellyfin.git"
+    "url": "https://github.com/lotrez/unwatched-jellyfin.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/unwatched-jellyfin/issues"
+    "url": "https://github.com/lotrez/unwatched-jellyfin/issues"
   },
-  "homepage": "https://github.com/yourusername/unwatched-jellyfin#readme"
+  "homepage": "https://github.com/lotrez/unwatched-jellyfin#readme"
 }
