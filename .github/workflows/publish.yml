@@ -52,6 +52,6 @@ jobs:
           fi
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish
         env:
           NPM_CONFIG_PROVENANCE: true
