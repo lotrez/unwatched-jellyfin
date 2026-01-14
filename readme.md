@@ -75,7 +75,7 @@ All sensitive credentials can be set via environment variables (see `.env.exampl
 ## Requirements
 
 - Bun runtime
-- Jellyfin server with Playback Reporting plugin (or standard API)
+- Jellyfin server with [Playback Reporting plugin](https://github.com/jellyfin/jellyfin-plugin-playbackreporting) installed and enabled
 - Sonarr server
 
 ## License
