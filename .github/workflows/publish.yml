@@ -45,5 +45,11 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Debug OIDC
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL: $ACTIONS_ID_TOKEN_REQUEST_URL"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+set}"
+          npm config list
+
       - name: Publish to npm
         run: npm publish
