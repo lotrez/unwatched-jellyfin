@@ -41,6 +41,16 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Debug OIDC token
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN}"
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "OIDC token is available"
+          else
+            echo "OIDC token is NOT available"
+          fi
+
       - name: Publish to npm
         run: npm publish --access public
         env:
