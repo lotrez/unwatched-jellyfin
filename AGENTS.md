@@ -9,6 +9,8 @@
 - **CLI Options**:
   - `--sonarr-url <url>` - Sonarr server URL
   - `--sonarr-api-key <key>` - Sonarr API key
+  - `--radarr-url <url>` - Radarr server URL
+  - `--radarr-api-key <key>` - Radarr API key
   - `--jellyfin-url <url>` - Jellyfin server URL
   - `--jellyfin-username <user>` - Jellyfin username
   - `--jellyfin-password <pass>` - Jellyfin password
@@ -18,7 +20,7 @@
   - `--help, -h` - Show help message
 
 ## Project Overview
-This project identifies and optionally deletes old, unwatched TV series from Sonarr based on Jellyfin playback data. It queries Jellyfin's playback activity to determine which episodes have been watched, cross-references with Sonarr, and flags series that haven't been watched within a configurable threshold.
+This project identifies and optionally deletes old, unwatched TV series from Sonarr and movies from Radarr based on Jellyfin playback data. It queries Jellyfin's playback activity to determine which episodes and movies have been watched, cross-references with Sonarr and Radarr, and flags content that hasn't been watched within a configurable threshold.
 
 ## Code Style
 
@@ -109,7 +111,10 @@ This project identifies and optionally deletes old, unwatched TV series from Son
 ### Environment Configuration
 - All sensitive credentials in `.env` (gitignored)
 - Reference config in `.env.example` without actual values
-- Required vars: `SONARR_URL`, `SONARR_API_KEY`, `JELLYFIN_URL`, `JELLYFIN_USERNAME`, `JELLYFIN_PASSWORD`
+- Required vars: `JELLYFIN_URL`, `JELLYFIN_USERNAME`, `JELLYFIN_PASSWORD`
+- At least one of the following must be configured:
+  - `SONARR_URL`, `SONARR_API_KEY` (for TV series)
+  - `RADARR_URL`, `RADARR_API_KEY` (for movies)
 - Optional vars: `AGE_THRESHOLD_DAYS` (default: 365), `DRY_RUN` (default: "true" - set to "false" to actually delete files)
 
 ### TypeScript Config Notes
@@ -138,6 +143,7 @@ This project identifies and optionally deletes old, unwatched TV series from Son
 ├── jellyfin-client.ts    # Jellyfin API client
 ├── jellyfin-utils.ts     # Jellyfin utilities (auth helpers)
 ├── sonarr-client.ts      # Sonarr API client
+├── radarr-client.ts      # Radarr API client
 ├── .env.example          # Environment variables template
 ├── package.json          # Dependencies
 ├── tsconfig.json         # TypeScript config

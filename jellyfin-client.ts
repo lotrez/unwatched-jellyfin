@@ -104,6 +104,19 @@ export class JellyfinClient {
     }));
   }
 
+  async getAllMovies() {
+    const url = `${this.baseUrl}/Users/${this.userId}/Items?IncludeItemTypes=Movie&Recursive=true&Fields=DateCreated,UserData`;
+    const data = await this.apiRequest(url);
+    const items = data.Items as JellyfinItem[];
+
+    return items.map((item) => ({
+      id: item.Id,
+      name: item.Name,
+      dateCreated: item.DateCreated,
+      played: item.UserData?.Played || false,
+    }));
+  }
+
   async getWatchedMedia() {
     const url = `${this.baseUrl}/Users/${this.userId}/Items?IncludeItemTypes=Episode&Recursive=true&Filters=IsPlayed&Fields=SeriesName,SeasonIndex,IndexNumber,DateCreated,UserData`;
     const data = await this.apiRequest(url);
